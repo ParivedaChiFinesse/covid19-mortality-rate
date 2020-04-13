@@ -1,3 +1,4 @@
+import pymc3 as pm
 
 def train_model(mod):
 
