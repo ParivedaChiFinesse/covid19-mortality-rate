@@ -47,6 +47,7 @@ wb_covariates = [
         'population_perc_rural')
 ]
 
+
 def make_dataset():
     '''
     Main routine that grabs all COVID and covariate data and
@@ -58,11 +59,11 @@ def make_dataset():
     * World Bank data on population, healthcare, etc. by country
     '''
     _get_external_data(EXTERNAL_DATA_BUCKET)
-    
+
     all_covid_data = _get_latest_covid_timeseries()
 
-    covid_cases_rollup = _rollup_by_country(all_covid_data['confirmed'])
-    covid_deaths_rollup = _rollup_by_country(all_covid_data['deaths'])
+    covid_cases_rollup = _rollup_by_country(all_covid_data['confirmed_global'])
+    covid_deaths_rollup = _rollup_by_country(all_covid_data['deaths_global'])
 
     todays_date = covid_cases_rollup.columns.max()
 
@@ -100,6 +101,7 @@ def make_dataset():
 
     return df_out
 
+
 def _get_external_data(bucket):
     files = set(os.listdir(EXTERNAL_DATA_DIR))
     session = boto3.Session(profile_name=EXTERNAL_DATA_ROLE)
@@ -109,7 +111,8 @@ def _get_external_data(bucket):
     for obj in bucket.objects.all():
         file = obj.key
         if file not in files:
-            bucket.download_file(file, os.path.join(EXTERNAL_DATA_DIR, file))    
+            bucket.download_file(file, os.path.join(EXTERNAL_DATA_DIR, file))
+
 
 def _get_latest_covid_timeseries():
     ''' Pull latest time-series data from JHU CSSE database '''
@@ -118,8 +121,8 @@ def _get_latest_covid_timeseries():
     data_path = TIME_SERIES_DATA_PATH
 
     all_data = {}
-    for status in ['confirmed', 'deaths', 'recovered']:
-        file_name = 'time_series_covid19_%s_global.csv' % status
+    for status in ['confirmed_US', 'confirmed_global', 'deaths_US', 'deaths_global', 'recovered_global']:
+        file_name = 'time_series_covid19_%s.csv' % status
         all_data[status] = pd.read_csv(
             '%s%s%s' % (repo, data_path, file_name))
 
@@ -224,7 +227,8 @@ def _add_wb_data(df_input):
 
         # Add WB data:
         df_input[var_name] = _get_most_recent_value(wb_series)
-        
+
+
 def _add_wb_data_diabetes(df_input):
     '''
     Add the World Bank diabetes as columns in the COVID cases dataframe.
@@ -234,7 +238,7 @@ def _add_wb_data_diabetes(df_input):
     '''
     wb_data = pd.read_csv(
         os.path.join(EXTERNAL_DATA_DIR, 'world_bank_diabetes.csv'),
-        na_values='""')     
+        na_values='""')
     wb_data.set_index('Country Name', inplace=True, drop=True)
     wb_data.rename(wb_country_mapping, axis=0, inplace=True)
 
