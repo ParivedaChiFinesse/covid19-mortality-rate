@@ -6,7 +6,7 @@ import boto3
 import pandas as pd
 import numpy as np
 
-EXTERNAL_DATA_DIR = os.path.abspath('../data/external')
+EXTERNAL_DATA_DIR = os.path.abspath('../src/data/external')
 EXTERNAL_DATA_BUCKET = 'chi-finesse-covid19-mortality-rate-external-data'
 TIME_SERIES_REPO = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/'
 TIME_SERIES_DATA_PATH = 'csse_covid_19_data/csse_covid_19_time_series/'
@@ -101,6 +101,9 @@ def make_dataset():
     return df_out
 
 def _get_external_data(bucket):
+    if not os.path.exists(EXTERNAL_DATA_DIR):
+        os.mkdir(EXTERNAL_DATA_DIR)
+    
     files = set(os.listdir(EXTERNAL_DATA_DIR))
     session = boto3.Session(profile_name=EXTERNAL_DATA_ROLE)
 
